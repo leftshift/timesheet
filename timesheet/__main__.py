@@ -36,7 +36,7 @@ def list(db, start, end, around):
         end = try_parse(end)
         res = db.get_range(start, end)
     else:
-        res = db.get_month()
+        res = db.get_month(None)
 
     print(res)
 

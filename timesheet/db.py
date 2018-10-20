@@ -1,6 +1,7 @@
 from timesheet.models import Base, Event
 from timesheet.util import month_boundries
 
+import datetime
 from functools import wraps
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -40,7 +41,8 @@ class Db:
 
     @with_session
     def get_month(self, session, around):
+        if not around:
+            around = datetime.datetime.now()
         start, end = month_boundries(around)
-        print(start, end)
         return self.get_range(start, end)
 
