@@ -28,13 +28,12 @@ def add(db, start, end, break_time):
 @click.option('--around', help='show month around specified day')
 @pass_db
 def list(db, start, end, around):
-    print(start, end)
     if around:
+        around = try_parse(around)
         res = db.get_month(around)
     elif start or end:
         start = try_parse(start)
         end = try_parse(end)
-        print(start, end)
         res = db.get_range(start, end)
     else:
         res = db.get_month()
