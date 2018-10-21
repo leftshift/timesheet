@@ -1,6 +1,6 @@
 import click
 from timesheet.db import Db
-from timesheet.util import try_parse
+from timesheet.util import try_parse, table
 
 pass_db = click.make_pass_decorator(Db)
 
@@ -38,13 +38,24 @@ def list(db, start, end, around):
     else:
         res = db.get_month(None)
 
-    for event in res:
-        s = "{date!s:<15}\t{dur!s:>10}\t{note:}".format(
-                date=event.start.date(),
-                dur=event.duration,
-                note=event.note
-                )
-        print(s)
+    fstring = "{date!s:<15}\t{dur!s:>10}\t{note:}"
+    header = {
+            "date": "Date",
+            "dur": "Duration",
+            "note": "Note"
+        }
+
+    def gen(res):
+        for event in res:
+            yield {
+                    "date": event.start.date(),
+                    "dur": event.duration,
+                    "note": event.note if event.note else ""
+                }
+
+    o = table(fstring, header, gen(res))
+    
+    click.echo(o)
 
 
 @cli.group()
