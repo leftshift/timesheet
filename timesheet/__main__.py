@@ -38,7 +38,13 @@ def list(db, start, end, around):
     else:
         res = db.get_month(None)
 
-    print(res)
+    for event in res:
+        s = "{date!s:<15}\t{dur!s:>10}\t{note:}".format(
+                date=event.start.date(),
+                dur=event.duration,
+                note=event.note
+                )
+        print(s)
 
 
 @cli.group()
