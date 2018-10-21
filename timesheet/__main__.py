@@ -1,6 +1,6 @@
 import click
 from timesheet.db import Db
-from timesheet.util import try_parse, table
+from timesheet.util import try_parse, iterate_events, table
 
 pass_db = click.make_pass_decorator(Db)
 
@@ -45,15 +45,8 @@ def list(db, start, end, around):
             "note": "Note"
         }
 
-    def gen(res):
-        for event in res:
-            yield {
-                    "date": event.start.date(),
-                    "dur": event.duration,
-                    "note": event.note if event.note else ""
-                }
 
-    o = table(fstring, header, gen(res))
+    o = table(fstring, header, iterate_events(res))
     
     click.echo(o)
 

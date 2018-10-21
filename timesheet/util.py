@@ -16,6 +16,14 @@ def month_boundries(around):
     end = around.replace(day=d2)
     return start, end
 
+def iterate_events(res):
+    for event in res:
+        yield {
+                "date": event.start.date(),
+                "dur": event.duration,
+                "note": event.note if event.note else ""
+            }
+
 def table(fstring, header, iterable):
     lines = []
     h = fstring.format(**header)
