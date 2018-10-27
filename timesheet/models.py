@@ -17,7 +17,7 @@ class Event(Base):
 
     note = Column(String)
 
-    @hybrid_property
+    @property
     def duration(self):
         return self.end - self.start - datetime.timedelta(minutes=self.break_mins)
 
