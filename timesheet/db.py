@@ -35,9 +35,8 @@ class Db:
 
     @with_session
     def get_range(self, session, start, end):
-        res = session.query(Event).filter(Event.start >= start)\
-                                  .filter(Event.end <= end)
-        return res.all()
+        r = Range(session, start, end)
+        return r
 
     @with_session
     def get_month(self, session, around):
@@ -45,4 +44,39 @@ class Db:
             around = datetime.datetime.now()
         start, end = month_boundries(around)
         return self.get_range(start, end)
+
+
+class Range():
+    def __init__(self, session, start, end):
+        if end < start:
+            raise ValueError("End needs to be after start")
+        self.session = session
+        self.start = start
+        self.end = end
+
+    @property
+    def duration(self):
+        return self.end - self.start
+
+    @property
+    def events(self):
+        res = self.session.query(Event)\
+                .filter(Event.start >= self.start)\
+                .filter(Event.end <= self.end)
+        return res.all()
+
+    @property
+    def sum(self):
+        return sum()
+
+
+class Week():
+    def __init__(self, start, end):
+        if end - start > datetime.timedelta(days=7):
+            raise ValueError("Week can't be longer than 7 days")
+        if (start.weekday() != 0) and (end.weekday() != 6):
+            raise ValueError("Week has to start on Monday or end on Sunday")
+
+        self.start = start
+        self.end = end
 

@@ -13,7 +13,7 @@ class Event(Base):
 
     start = Column(DateTime)
     end = Column(DateTime)
-    break_mins = Column(Integer)
+    break_mins = Column(Integer, default=0)
 
     note = Column(String)
 

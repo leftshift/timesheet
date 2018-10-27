@@ -46,7 +46,7 @@ def list(db, start, end, around):
         }
 
 
-    o = table(fstring, header, iterate_events(res))
+    o = table(fstring, header, iterate_events(res.events))
     
     click.echo(o)
 
