@@ -2,6 +2,7 @@ from timesheet.models import Base, Event
 from timesheet.util import month_boundries
 
 import datetime
+import statistics
 from functools import wraps
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -35,7 +36,7 @@ class Db:
 
     @with_session
     def get_range(self, session, start, end):
-        r = Range(session, start, end)
+        r = TimeRange(session, start, end)
         return r
 
     @with_session
@@ -46,7 +47,7 @@ class Db:
         return self.get_range(start, end)
 
 
-class Range():
+class TimeRange():
     def __init__(self, session, start, end):
         if end < start:
             raise ValueError("End needs to be after start")
@@ -66,11 +67,16 @@ class Range():
         return res.all()
 
     @property
-    def sum(self):
-        return sum()
+    def total(self):
+        return sum(self.events)
+
+    @property
+    def mean(self):
+        mean_sec = statistics.mean(float(e) for e in self.events)
+        return datetime.timedelta(seconds=mean_sec)
 
 
-class Week():
+class Week(TimeRange):
     def __init__(self, start, end):
         if end - start > datetime.timedelta(days=7):
             raise ValueError("Week can't be longer than 7 days")

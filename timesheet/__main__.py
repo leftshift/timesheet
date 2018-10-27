@@ -28,6 +28,7 @@ def add(db, start, end, break_time):
 @click.option('--around', help='show month around specified day')
 @pass_db
 def list(db, start, end, around):
+    lines = []
     if around:
         around = try_parse(around)
         res = db.get_month(around)
@@ -46,9 +47,14 @@ def list(db, start, end, around):
         }
 
 
-    o = table(fstring, header, iterate_events(res.events))
+    lines.append(table(fstring, header, iterate_events(res.events)))
+
+    lines.append("")
+    lines.append("=" * 20)
+    lines.append(click.style("sum:", fg="green") + "{!s:>15}".format(res.total))
+    lines.append(click.style("mean:", fg="green") + "{!s:>14}".format(res.mean))
     
-    click.echo(o)
+    click.echo("\n".join(lines))
 
 
 @cli.group()

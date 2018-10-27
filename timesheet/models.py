@@ -21,3 +21,15 @@ class Event(Base):
     def duration(self):
         return self.end - self.start - datetime.timedelta(minutes=self.break_mins)
 
+    def __float__(self):
+        return self.duration.total_seconds()
+
+    def __add__(self, other):
+        return self.duration + other
+
+    def __radd__(self, other):
+        if other == 0:
+            return self.duration
+        else:
+            return self.__add__(other)
+
