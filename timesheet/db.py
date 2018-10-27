@@ -72,6 +72,8 @@ class TimeRange():
 
     @property
     def mean(self):
+        if len(self.events) == 0:
+            return datetime.timedelta(0)
         mean_sec = statistics.mean(float(e) for e in self.events)
         return datetime.timedelta(seconds=mean_sec)
 
