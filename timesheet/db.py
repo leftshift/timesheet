@@ -42,7 +42,8 @@ class Db:
     @with_session
     def get_month(self, session, around):
         if not around:
-            around = datetime.datetime.now()
+            ## Do this to drop all time information
+            around = datetime.datetime.now().date()
         start, end = month_boundries(around)
         return self.get_range(start, end)
 

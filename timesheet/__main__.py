@@ -21,6 +21,7 @@ def add(db, start, end, break_time):
     start = try_parse(start)
     end = try_parse(end)
     db.add(start, end, break_time)
+    click.echo("Added event from {} to {}".format(start, end))
 
 @cli.command(name="list")
 @click.option('--start', '--from', help='set lower limit for time range')
