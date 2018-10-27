@@ -22,12 +22,12 @@ def add(db, start, end, break_time):
     end = try_parse(end)
     db.add(start, end, break_time)
 
-@cli.command()
-@click.option('--start', help='set lower limit for time range')
-@click.option('--end', help='set upper limit for time range')
+@cli.command(name="list")
+@click.option('--start', '--from', help='set lower limit for time range')
+@click.option('--end', '--to', help='set upper limit for time range')
 @click.option('--around', help='show month around specified day')
 @pass_db
-def list(db, start, end, around):
+def list_(db, start, end, around):
     lines = []
     if around:
         around = try_parse(around)
