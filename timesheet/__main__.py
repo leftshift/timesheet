@@ -58,8 +58,15 @@ def list_(db, start, end, around):
 
     lines.append("")
     lines.append("=" * 20)
-    lines.append(click.style("sum:", fg="green") + "{!s:>15}".format(res.total))
-    lines.append(click.style("mean:", fg="green") + "{!s:>14}".format(res.mean))
+
+    total = int(res.total.total_seconds() // 60)
+    total_hour, total_min = divmod(total, 60)
+    total_s = "{h}:{m:0<2}".format(h=total_hour, m=total_min)
+
+    mean_s = str(res.mean)[:-3]
+
+    lines.append(click.style("sum:", fg="green") + "{:>15}".format(total_s))
+    lines.append(click.style("mean:", fg="green") + "{:>14}".format(mean_s))
     
     click.echo("\n".join(lines))
 
