@@ -19,7 +19,11 @@ class Event(Base):
 
     @property
     def duration(self):
-        return self.end - self.start - datetime.timedelta(minutes=self.break_mins)
+        if self.end:
+            return self.end - self.start\
+                    - datetime.timedelta(minutes=self.break_mins)
+        else:
+            return datetime.timedelta(0)
 
     def __float__(self):
         return self.duration.total_seconds()
