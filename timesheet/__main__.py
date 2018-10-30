@@ -29,6 +29,28 @@ def add(db, start, end, break_time):
     db.add(start, end, break_time)
     click.echo("Added event from {} to {}".format(start, end))
 
+@cli.command()
+@click.argument('time', required=False)
+@pass_db
+def start(db, time):
+    if time:
+        time = try_parse(time)
+    db.add_start(time)
+    click.echo("Started work at {}".format(time))
+
+@cli.command()
+@click.argument('time', required=False)
+@click.argument('break_time', default=0)
+@pass_db
+def end(db, time, break_time):
+    if time:
+        time = try_parse(time)
+    res = db.add_end(time, break_time)
+    click.echo("Finished work, from {} to {}".format(
+            res.start,
+            res.end
+        ))
+
 @cli.command(name="list")
 @click.option('--start', '--from', help='set lower limit for time range')
 @click.option('--end', '--to', help='set upper limit for time range')

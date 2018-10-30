@@ -20,19 +20,53 @@ class Db:
             return f(self, session, *args, **kwargs)
         return wrapper
 
+    def require_clean(f):
+        @wraps(f)
+        def wrapper(self, *args, **kwargs):
+            session = self.Session()
+            open_events = session.query(Event).filter(Event.end==None).all()
+            if len(open_events) == 1:
+                raise ValueError("There is still an open session left")
+            elif len(open_events) > 1:
+                raise AssertionError("Database inconsistent, there is more than one open session")
+            return f(self, *args, **kwargs)
+
+        return wrapper
+
     def init_db(self):
         Base.metadata.create_all(self.engine)
 
     @with_session
-    def add(self, session, start, end, break_time):
-
-        delta = end - start
-        if delta.total_seconds() / 60 < break_time:
-            raise ValueError('break time is greater than total work time')
-
+    def _add_to_db(self, session, start, end, break_time):
         e = Event(start=start, end=end, break_mins=break_time)
         session.add(e)
         session.commit()
+
+    @require_clean
+    def add(self, start, end, break_time):
+        delta = end - start
+        if delta.total_seconds() / 60 < break_time:
+            raise ValueError('break time is greater than total work time')
+        self._add_to_db(start, end, break_time)
+
+    @require_clean
+    def add_start(self, start):
+        if not start:
+            start = datetime.datetime.now()
+            start.replace(second=0, microsecond=0)
+        self._add_to_db(start, None, None)
+
+    @with_session
+    def add_end(self, session, end, break_time):
+        event = session.query(Event).filter(Event.end == None).one()
+        event.end = end
+        event.break_time = break_time
+
+        session.add(event)
+        session.commit()
+        return event
+
+
 
     @with_session
     def get_range(self, session, start, end):
@@ -64,7 +98,7 @@ class TimeRange():
     def events(self):
         res = self.session.query(Event)\
                 .filter(Event.start >= self.start)\
-                .filter(Event.end <= self.end)
+                .filter((Event.end <= self.end) | (Event.end==None))
         return res.all()
 
     @property
