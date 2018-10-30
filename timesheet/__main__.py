@@ -1,4 +1,5 @@
 import click
+import datetime
 from timesheet.db import Db
 from timesheet.util import try_parse, iterate_events, table
 
@@ -20,6 +21,11 @@ def cli(ctx, db):
 def add(db, start, end, break_time):
     start = try_parse(start)
     end = try_parse(end)
+    if end < start:
+        raise ValueError("start time is after end time")
+    if end - start > datetime.timedelta(hours=10):
+        raise ValueError("Duration of over 8h seems unlikely")
+
     db.add(start, end, break_time)
     click.echo("Added event from {} to {}".format(start, end))
 
