@@ -19,6 +19,10 @@ def cli(ctx, db):
 @click.argument('break_time', default=0) 
 @pass_db
 def add(db, start, end, break_time):
+    """Add working hours from START until END.
+    
+    Optionally, a break can be added, giving it's duration
+    in minutes in BREAK_TIME"""
     start = try_parse(start)
     end = try_parse(end)
     if end < start:
@@ -33,6 +37,12 @@ def add(db, start, end, break_time):
 @click.argument('time', required=False)
 @pass_db
 def start(db, time):
+    """Start work session.
+
+    This session can later be ended with `timesheet end`
+    
+    By default, it will start at the current time, optionally,
+    the beginning can be given in TIME"""
     if time:
         time = try_parse(time)
     db.add_start(time)
@@ -43,6 +53,15 @@ def start(db, time):
 @click.argument('break_time', default=0)
 @pass_db
 def end(db, time, break_time):
+    """End work session.
+    
+    This will end the current work session, earlier started with
+    `timesheet start`
+    
+    By default, it will end the session at the current time,
+    optionally, the end can be given with TIME.
+    
+    Also, the length of a break in minutes can be passed in BREAK_TIME."""
     if time:
         time = try_parse(time)
     res = db.add_end(time, break_time)
@@ -54,9 +73,13 @@ def end(db, time, break_time):
 @cli.command(name="list")
 @click.option('--start', '--from', help='set lower limit for time range')
 @click.option('--end', '--to', help='set upper limit for time range')
-@click.option('--around', help='show month around specified day')
+@click.option('--around', help='show month around specified date')
 @pass_db
 def list_(db, start, end, around):
+    """Show events in given range.
+    
+    By default, it shows the current month.
+    """
     lines = []
     if around:
         around = try_parse(around)
@@ -100,11 +123,13 @@ def list_(db, start, end, around):
 
 @cli.group()
 def db():
+    """Manage timesheet database."""
     pass
 
 @db.command()
 @pass_db
 def init(db):
+    """Create necessary tables in the database."""
     db.init_db()
 
 cli()
