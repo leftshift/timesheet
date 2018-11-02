@@ -11,8 +11,7 @@ def try_parse(date):
 
 def month_boundries(around):
     d1, d2 = calendar.monthrange(around.year, around.month)
-    # cuz of course, the first day is the 0. (not)
-    start = around.replace(day=d1+1)
+    start = around.replace(day=1)
     end = around.replace(day=d2)
     return start, end
 
