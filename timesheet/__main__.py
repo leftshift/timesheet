@@ -68,6 +68,11 @@ def list_(db, start, end, around):
     else:
         res = db.get_month(None)
 
+    if not res.events:
+        click.echo(click.style("No events in specified range :D",
+                   fg="green"))
+        return
+
     fstring = "{date!s:<15}\t{dur!s:>10}\t{note:}"
     header = {
             "date": "Date",
