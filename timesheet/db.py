@@ -8,12 +8,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 class Db:
+    """Access to a database, based on sqlalchemy."""
+
     def __init__(self, path):
+        """
+        :param path: SQLAlchemy database path to connect to.
+            Examples: https://docs.sqlalchemy.org/en/latest/core/engines.html"""
         self.path = path
         self.engine = create_engine(path)
         self.Session = sessionmaker(bind=self.engine)
 
     def with_session(f):
+        """Wraps function `f`, gives a sqlalchemy `session` as second argument"""
         @wraps(f)
         def wrapper(self, *args, **kwargs):
             session = self.Session()
@@ -21,6 +27,12 @@ class Db:
         return wrapper
 
     def require_clean(f):
+        """Wraps function `f`, checks whether the database is 'clean',
+        raises an Exception if it isn't.
+
+        'clean' means there are no started sessions in the database,
+        e.g. there are no events in the database with a start but
+        without an end."""
         @wraps(f)
         def wrapper(self, *args, **kwargs):
             session = self.Session()
@@ -34,6 +46,7 @@ class Db:
         return wrapper
 
     def init_db(self):
+        """Creates all required tables in the database."""
         Base.metadata.create_all(self.engine)
 
     @with_session
@@ -44,6 +57,10 @@ class Db:
 
     @require_clean
     def add(self, start, end, break_time):
+        """Adds an event to the database.
+        :param start, end: datetime.datetime objects for the begining and end
+            of the work event.
+        :param break_time: Break in the work event in minutes."""
         delta = end - start
         if delta.total_seconds() / 60 < break_time:
             raise ValueError('break time is greater than total work time')
@@ -51,6 +68,10 @@ class Db:
 
     @require_clean
     def add_start(self, start):
+        """Start a work session in the database.
+        Adds an event with a start but without an end.
+        :param start: datetime.datetime object for the beginning of the session.
+            If this is None, the current time is used."""
         if not start:
             start = datetime.datetime.now()
             start.replace(second=0, microsecond=0)
@@ -58,7 +79,13 @@ class Db:
 
     @with_session
     def add_end(self, session, end, break_time):
+        """Ends a previously started work session.
+        :param end: datetime.datetime object for the end of the session.
+            If this is None, the current time is used."""
         event = session.query(Event).filter(Event.end == None).one()
+        if not end:
+            end = datetime.datetime.now()
+            end.replace(second=0, microsecond=0)
         event.end = end
         event.break_time = break_time
 
@@ -70,11 +97,15 @@ class Db:
 
     @with_session
     def get_range(self, session, start, end):
+        """Gets a :class:`TimeRange` object over the specified range.
+        :param start, end: datetime.datetime objects for
+            beginning and end of range."""
         r = TimeRange(session, start, end)
         return r
 
     @with_session
     def get_month(self, session, around):
+        """Gets the :class:`TimeRange` object ranging over the month of `around`."""
         if not around:
             ## Do this to drop all time information
             around = datetime.datetime.now().date()
@@ -83,6 +114,7 @@ class Db:
 
 
 class TimeRange():
+    """Represents a time range of events from a database."""
     def __init__(self, session, start, end):
         if end < start:
             raise ValueError("End needs to be after start")
@@ -92,10 +124,12 @@ class TimeRange():
 
     @property
     def duration(self):
+        """Length of the range as `datetime.timedelta`"""
         return self.end - self.start
 
     @property
     def events(self):
+        """List of events in this range."""
         res = self.session.query(Event)\
                 .filter(Event.start >= self.start)\
                 .filter((Event.end <= self.end) | (Event.end==None))
@@ -103,23 +137,16 @@ class TimeRange():
 
     @property
     def total(self):
+        """Sum of durations of the events in this range.
+        Returns datetime.timedelta or integer 0 if the range is empty."""
         return sum(self.events)
 
     @property
     def mean(self):
+        """Arithmetic mean of the events in this range."""
         if len(self.events) == 0:
             return datetime.timedelta(0)
         mean_sec = statistics.mean(float(e) for e in self.events)
         return datetime.timedelta(seconds=mean_sec)
 
-
-class Week(TimeRange):
-    def __init__(self, start, end):
-        if end - start > datetime.timedelta(days=7):
-            raise ValueError("Week can't be longer than 7 days")
-        if (start.weekday() != 0) and (end.weekday() != 6):
-            raise ValueError("Week has to start on Monday or end on Sunday")
-
-        self.start = start
-        self.end = end
 
