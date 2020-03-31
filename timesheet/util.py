@@ -1,10 +1,10 @@
-from datetime import datetime
+import datetime
 from dateparser import parse
 import calendar
 import click
 
 def try_parse(date):
-    if date and not isinstance(date, datetime):
+    if date and not isinstance(date, datetime.datetime):
         date = parse(date, languages=['de'])
 
     return date
@@ -12,7 +12,7 @@ def try_parse(date):
 def month_boundries(around):
     d1, d2 = calendar.monthrange(around.year, around.month)
     start = around.replace(day=1)
-    end = around.replace(day=d2)
+    end = around.replace(day=d2) + datetime.timedelta(days=1)
     return start, end
 
 def iterate_events(res):
