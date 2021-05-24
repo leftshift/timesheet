@@ -15,6 +15,11 @@ def month_boundries(around):
     end = around.replace(day=d2) + datetime.timedelta(days=1)
     return start, end
 
+def week_boundries(around):
+    start = around - datetime.timedelta(days=around.weekday())  # Monday
+    end = start + datetime.timedelta(days=6)  # Sunday
+    return start, end
+
 def iterate_events(res):
     for event in res:
         yield {

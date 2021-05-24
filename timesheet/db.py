@@ -1,5 +1,5 @@
 from timesheet.models import Base, Event
-from timesheet.util import month_boundries
+from timesheet.util import month_boundries, week_boundries
 
 import datetime
 import statistics
@@ -112,6 +112,15 @@ class Db:
         start, end = month_boundries(around)
         return self.get_range(start, end)
 
+    @with_session
+    def get_week(self, session, around):
+        """Gets the :class:`TimeRange` object ranging over the month of `around`."""
+        if not around:
+            ## Do this to drop all time information
+            around = datetime.datetime.now().date()
+        start, end = week_boundries(around)
+        return self.get_range(start, end)
+
 
 class TimeRange():
     """Represents a time range of events from a database."""
@@ -138,8 +147,8 @@ class TimeRange():
     @property
     def total(self):
         """Sum of durations of the events in this range.
-        Returns datetime.timedelta or integer 0 if the range is empty."""
-        return sum(self.events)
+        Returns datetime.timedelta."""
+        return sum(self.events, datetime.timedelta(0))
 
     @property
     def mean(self):

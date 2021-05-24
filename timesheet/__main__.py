@@ -1,13 +1,16 @@
+import pathlib
 import click
 import datetime
 from timesheet.db import Db
 from timesheet.util import try_parse, iterate_events, table
 
 pass_db = click.make_pass_decorator(Db)
+default_db_path = pathlib.Path.home() / 'timesheet.db'
+print(default_db_path)
 
 @click.group()
 @click.version_option('0.1')
-@click.option('--db', default='sqlite:///timesheet.db',
+@click.option('--db', default=f'sqlite:////{default_db_path}',
               help='full database and driver string for SQLAlchemy')
 @click.pass_context
 def cli(ctx, db):
@@ -84,15 +87,17 @@ def list_(db, start, end, around):
     if around:
         around = try_parse(around)
         res = db.get_month(around)
+        week = db.get_week(around)
     elif start or end:
         start = try_parse(start)
         end = try_parse(end)
         res = db.get_range(start, end)
     else:
         res = db.get_month(None)
+        week = db.get_week(None)
 
     if not res.events:
-        click.echo(click.style("No events in specified range :D",
+        click.echo(click.style("No events in specified range",
                    fg="green"))
         return
 
@@ -107,16 +112,23 @@ def list_(db, start, end, around):
     lines.append(table(fstring, header, iterate_events(res.events)))
 
     lines.append("")
-    lines.append("=" * 20)
+    lines.append("=" * 30)
 
     total = int(res.total.total_seconds() // 60)
     total_hour, total_min = divmod(total, 60)
     total_s = "{h}:{m:0<2}".format(h=total_hour, m=total_min)
 
+
     mean_s = str(res.mean)[:-3]
 
-    lines.append(click.style("sum:", fg="green") + "{:>15}".format(total_s))
-    lines.append(click.style("mean:", fg="green") + "{:>14}".format(mean_s))
+    lines.append(click.style("sum:", fg="green") + "{:>25}".format(total_s))
+    lines.append(click.style("mean:", fg="green") + "{:>24}".format(mean_s))
+
+    if week:
+        total_week = int(week.total.total_seconds() // 60)
+        total_week_hour, total_week_min = divmod(total_week, 60)
+        total_week_s = "{h}:{m:0<2}".format(h=total_week_hour, m=total_week_min)
+        lines.append(click.style("sum this week:", fg="green") + "{:>15}".format(total_week_s))
     
     click.echo("\n".join(lines))
 
